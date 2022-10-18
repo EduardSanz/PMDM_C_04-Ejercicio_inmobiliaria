@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private ArrayList<Inmueble> inmueblesList;
     private ActivityResultLauncher<Intent> addInmuebleLauncher;
+    private ActivityResultLauncher<Intent> editInmuebleLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +45,8 @@ public class MainActivity extends AppCompatActivity {
         binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addInmuebleLauncher.launch(new Intent(MainActivity.this, AddInmuebleActivity.class));
+                Intent intent = new Intent(MainActivity.this, AddInmuebleActivity.class);
+                addInmuebleLauncher.launch(intent);
             }
         });
     }
@@ -81,6 +83,31 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
+        editInmuebleLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (result.getResultCode() == RESULT_OK) {
+                            if (result.getData() != null && result.getData().getExtras() != null){
+                                Inmueble inmueble = (Inmueble) result.getData().getExtras().getSerializable(Constantes.INMUEBLE);
+                                int posicion = result.getData().getExtras().getInt(Constantes.POSICION);
+                                if (inmueble != null) {
+                                    inmueblesList.set(posicion, inmueble);
+                                    mostrarInmuebles();
+                                }
+                                else {
+                                    inmueblesList.remove(posicion);
+                                    mostrarInmuebles();
+                                }
+                            }
+                            else {
+
+                            }
+                        }
+                    }
+                }
+        );
     }
 
     private void mostrarInmuebles() {
@@ -96,6 +123,20 @@ public class MainActivity extends AppCompatActivity {
             TextView lblProvincia = inmuebleView.findViewById(R.id.lblProvinciaInmuebleModel);
             TextView lblCiudad = inmuebleView.findViewById(R.id.lblCiudadInmuebleModel);
             RatingBar rbValoracion = inmuebleView.findViewById(R.id.rbValoracionInmuebleModel);
+
+            final int finalI = i;
+            inmuebleView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(MainActivity.this, EditInmuebleActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable(Constantes.INMUEBLE, inmueble);
+                    bundle.putInt(Constantes.POSICION, finalI);
+                    intent.putExtras(bundle);
+                    editInmuebleLauncher.launch(intent);
+                }
+            });
+
 
             lblDireccion.setText(inmueble.getDireccion());
             lblCiudad.setText(inmueble.getCiudad());
